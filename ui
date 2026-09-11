@@ -136,7 +136,7 @@ window.ClipsDescendants = true
 window.Position = UDim2.new(0, 0, 0, 0)
 window.Selectable = true
 window.Size = UDim2.new(1, 0, 1, 0)
-window.Image = "rbxassetid://133853330162052"
+window.Image = "rbxassetid://102628054401726"
 window.ImageColor3 = Color3.new(0.0823529, 0.0862745, 0.0901961)
 window.ScaleType = Enum.ScaleType.Slice
 window.SliceCenter = Rect.new(12, 12, 12, 12)
@@ -162,7 +162,7 @@ toggle.Position = UDim2.new(0, 5, 0, - 2)
 toggle.Rotation = 0
 toggle.Size = UDim2.new(0, 20, 0, 20)
 toggle.ZIndex = 2
-toggle.Image = "https://www.roblox.com/Thumbs/Asset.ashx?width=420&height=420&assetId=74855871158993"
+toggle.Image = "https://www.roblox.com/Thumbs/Asset.ashx?width=420&height=420&assetId=136171704230647"
 local toggleCorner = Instance.new("UICorner")
 toggleCorner.CornerRadius = UDim.new(0.5, 0)
 toggleCorner.Parent = toggle
