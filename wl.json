@@ -1,9 +1,0 @@
-{
-  "enabled": true,
-  "allowedUserIds": [
-    ,
-    ,
-  ],
-  "allowedUsernames": [],
-  "kickMessage": "You are not whitelisted."
-}
