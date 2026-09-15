@@ -728,6 +728,8 @@ function lib:AddWindow(title, options)
 	local resizeInputType = nil
 
 	local dragging = false
+	local dragPending = false
+	local dragFromScroll = false
 	local dragInputType = nil
 	local dragStart = Vector2.zero
 	local dragStartPos = UDim2.new()
@@ -769,14 +771,34 @@ function lib:AddWindow(title, options)
 			return
 		end
 		local pos = Vector2.new(input.Position.X, input.Position.Y)
-		if not pointInGui(Window, pos) or isNoDragAt(pos) or isScrollAreaAt(pos) then
+		if not pointInGui(Window, pos) or isNoDragAt(pos) then
 			return
 		end
-		dragging = true
+		dragging = false
+		dragPending = true
+		dragFromScroll = isScrollAreaAt(pos)
 		dragInputType = input.UserInputType
 		dragStart = pos
 		dragStartPos = Window.Position
 	end)
+
+	local function commitWindowDrag()
+		if dragging or not dragPending then
+			return
+		end
+		dragging = true
+		dragPending = false
+		if Window.AnchorPoint ~= Vector2.zero then
+			local absoluteTopLeft = Window.AbsolutePosition
+			local parentTopLeft = windowsFrame.AbsolutePosition
+			Window.AnchorPoint = Vector2.zero
+			Window.Position = UDim2.fromOffset(
+				absoluteTopLeft.X - parentTopLeft.X,
+				absoluteTopLeft.Y - parentTopLeft.Y
+			)
+			dragStartPos = Window.Position
+		end
+	end
 
 	UIS.InputChanged:Connect(function(input)
 		if resizing then
@@ -795,7 +817,7 @@ function lib:AddWindow(title, options)
 			oldy = newHeight
 			return
 		end
-		if not dragging then
+		if not dragging and not dragPending then
 			return
 		end
 		local isMouseMove = dragInputType == Enum.UserInputType.MouseButton1
@@ -807,6 +829,21 @@ function lib:AddWindow(title, options)
 		end
 		local current = Vector2.new(input.Position.X, input.Position.Y)
 		local delta = current - dragStart
+		if dragPending and not dragging then
+			local moved = math.max(math.abs(delta.X), math.abs(delta.Y))
+			if moved < 6 then
+				return
+			end
+			if dragFromScroll and math.abs(delta.Y) >= math.abs(delta.X) then
+				dragPending = false
+				dragInputType = nil
+				return
+			end
+			commitWindowDrag()
+		end
+		if not dragging then
+			return
+		end
 		Window.Position = UDim2.new(
 			dragStartPos.X.Scale,
 			dragStartPos.X.Offset + delta.X,
@@ -825,12 +862,14 @@ function lib:AddWindow(title, options)
 				resizeInputType = nil
 			end
 		end
-		if dragging then
+		if dragging or dragPending then
 			if (dragInputType == Enum.UserInputType.MouseButton1
 					and input.UserInputType == Enum.UserInputType.MouseButton1)
 				or (dragInputType == Enum.UserInputType.Touch
 					and input.UserInputType == Enum.UserInputType.Touch) then
 				dragging = false
+				dragPending = false
+				dragFromScroll = false
 				dragInputType = nil
 			end
 		end
