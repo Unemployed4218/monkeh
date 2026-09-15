@@ -152,7 +152,42 @@ local library = (function()
 		Window.Parent = windowsFrame
 		glass(Window)
 		Window.BackgroundColor3 = Theme.sheet
-		Window.Draggable = true
+		Window.Draggable = false
+
+		local function markNoDrag(obj)
+			if obj then
+				obj:SetAttribute("NoDrag", true)
+			end
+		end
+
+		local function isVisibleInWindow(obj)
+			local node = obj
+			while node and node ~= Window do
+				if node:IsA("GuiObject") and not node.Visible then
+					return false
+				end
+				node = node.Parent
+			end
+			return node == Window and Window.Visible
+		end
+
+		local function pointInGui(obj, pos)
+			if not obj then
+				return false
+			end
+			local p = obj.AbsolutePosition
+			local s = obj.AbsoluteSize
+			return pos.X >= p.X and pos.Y >= p.Y and pos.X <= p.X + s.X and pos.Y <= p.Y + s.Y
+		end
+
+		local function isNoDragAt(pos)
+			for _, desc in ipairs(Window:GetDescendants()) do
+				if desc:IsA("GuiObject") and desc:GetAttribute("NoDrag") and isVisibleInWindow(desc) and pointInGui(desc, pos) then
+					return true
+				end
+			end
+			return false
+		end
 		local closePill = Instance.new("TextButton")
 		closePill.Name = "Toggle"
 		closePill.AutoButtonColor = false
@@ -163,6 +198,7 @@ local library = (function()
 		closePill.Text = ""
 		closePill.ZIndex = Window.ZIndex + 5
 		closePill.Parent = Window
+		markNoDrag(closePill)
 		corner(closePill, 18)
 		local closeGlyph = Instance.new("TextLabel")
 		closeGlyph.BackgroundTransparency = 1
@@ -248,33 +284,68 @@ local library = (function()
 		resizeHandle.TextSize = 18
 		resizeHandle.ZIndex = Window.ZIndex + 10
 		resizeHandle.Parent = Window
+		markNoDrag(resizeHandle)
 
 		local resizing = false
 		local resizeStart = Vector2.zero
 		local resizeStartSize = Vector2.zero
 		local resizeInputType = nil
 
+		local dragging = false
+		local dragInputType = nil
+		local dragStart = Vector2.zero
+		local dragStartPos = UDim2.new()
+		local frozenScroll = {}
+
+		local function pinWindowTopLeft()
+			if Window.AnchorPoint == Vector2.zero then
+				return
+			end
+			local absoluteTopLeft = Window.AbsolutePosition
+			local parentTopLeft = windowsFrame.AbsolutePosition
+			Window.AnchorPoint = Vector2.zero
+			Window.Position = UDim2.fromOffset(
+				absoluteTopLeft.X - parentTopLeft.X,
+				absoluteTopLeft.Y - parentTopLeft.Y
+			)
+		end
+
+		local function freezeScrolling()
+			table.clear(frozenScroll)
+			for _, desc in ipairs(Window:GetDescendants()) do
+				if desc:IsA("ScrollingFrame") then
+					frozenScroll[desc] = {
+						enabled = desc.ScrollingEnabled,
+						canvas = desc.CanvasPosition
+					}
+					desc.ScrollingEnabled = false
+					desc.CanvasPosition = frozenScroll[desc].canvas
+				end
+			end
+		end
+
+		local function unfreezeScrolling()
+			for desc, info in pairs(frozenScroll) do
+				if desc and desc.Parent then
+					desc.CanvasPosition = info.canvas
+					desc.ScrollingEnabled = info.enabled
+				end
+			end
+			table.clear(frozenScroll)
+		end
+
 		local function beginResize(input)
 			if not open then
 				return
 			end
-
+			dragging = false
+			dragInputType = nil
+			unfreezeScrolling()
 			resizing = true
 			resizeInputType = input.UserInputType
 			resizeStart = Vector2.new(input.Position.X, input.Position.Y)
 			resizeStartSize = Window.AbsoluteSize
-
-			-- Convert the centered window to a top-left anchor without moving it.
-			-- This keeps the top-left fixed while the bottom-right handle is dragged.
-			if Window.AnchorPoint ~= Vector2.zero then
-				local absoluteTopLeft = Window.AbsolutePosition
-				local parentTopLeft = windowsFrame.AbsolutePosition
-				Window.AnchorPoint = Vector2.zero
-				Window.Position = UDim2.fromOffset(
-					absoluteTopLeft.X - parentTopLeft.X,
-					absoluteTopLeft.Y - parentTopLeft.Y
-				)
-			end
+			pinWindowTopLeft()
 		end
 
 		resizeHandle.InputBegan:Connect(function(input)
@@ -284,42 +355,88 @@ local library = (function()
 			end
 		end)
 
-		UIS.InputChanged:Connect(function(input)
-			if not resizing then
+		UIS.InputBegan:Connect(function(input)
+			if resizing or not root.Enabled then
 				return
 			end
+			if input.UserInputType ~= Enum.UserInputType.MouseButton1
+				and input.UserInputType ~= Enum.UserInputType.Touch then
+				return
+			end
+			local pos = Vector2.new(input.Position.X, input.Position.Y)
+			if not pointInGui(Window, pos) or isNoDragAt(pos) then
+				return
+			end
+			pinWindowTopLeft()
+			freezeScrolling()
+			dragging = true
+			dragInputType = input.UserInputType
+			dragStart = pos
+			dragStartPos = Window.Position
+		end)
 
-			local isMouseMove = resizeInputType == Enum.UserInputType.MouseButton1
+		UIS.InputChanged:Connect(function(input)
+			if resizing then
+				local isMouseMove = resizeInputType == Enum.UserInputType.MouseButton1
+					and input.UserInputType == Enum.UserInputType.MouseMovement
+				local isTouchMove = resizeInputType == Enum.UserInputType.Touch
+					and input.UserInputType == Enum.UserInputType.Touch
+				if not isMouseMove and not isTouchMove then
+					return
+				end
+				local current = Vector2.new(input.Position.X, input.Position.Y)
+				local delta = current - resizeStart
+				local newWidth = math.max(options.min_size.X, resizeStartSize.X + delta.X)
+				local newHeight = math.max(options.min_size.Y, resizeStartSize.Y + delta.Y)
+				Window.Size = UDim2.fromOffset(newWidth, newHeight)
+				oldy = newHeight
+				return
+			end
+			if not dragging then
+				return
+			end
+			local isMouseMove = dragInputType == Enum.UserInputType.MouseButton1
 				and input.UserInputType == Enum.UserInputType.MouseMovement
-			local isTouchMove = resizeInputType == Enum.UserInputType.Touch
+			local isTouchMove = dragInputType == Enum.UserInputType.Touch
 				and input.UserInputType == Enum.UserInputType.Touch
-
 			if not isMouseMove and not isTouchMove then
 				return
 			end
-
 			local current = Vector2.new(input.Position.X, input.Position.Y)
-			local delta = current - resizeStart
-			local newWidth = math.max(options.min_size.X, resizeStartSize.X + delta.X)
-			local newHeight = math.max(options.min_size.Y, resizeStartSize.Y + delta.Y)
-
-			Window.Size = UDim2.fromOffset(newWidth, newHeight)
-			oldy = newHeight
+			local delta = current - dragStart
+			for desc, info in pairs(frozenScroll) do
+				if desc and desc.Parent then
+					desc.CanvasPosition = info.canvas
+				end
+			end
+			Window.Position = UDim2.fromOffset(
+				dragStartPos.X.Offset + delta.X,
+				dragStartPos.Y.Offset + delta.Y
+			)
 		end)
 
 		UIS.InputEnded:Connect(function(input)
-			if not resizing then
-				return
+			if resizing then
+				if (resizeInputType == Enum.UserInputType.MouseButton1
+						and input.UserInputType == Enum.UserInputType.MouseButton1)
+					or (resizeInputType == Enum.UserInputType.Touch
+						and input.UserInputType == Enum.UserInputType.Touch) then
+					resizing = false
+					resizeInputType = nil
+				end
 			end
-
-			if (resizeInputType == Enum.UserInputType.MouseButton1
-					and input.UserInputType == Enum.UserInputType.MouseButton1)
-				or (resizeInputType == Enum.UserInputType.Touch
-					and input.UserInputType == Enum.UserInputType.Touch) then
-				resizing = false
-				resizeInputType = nil
+			if dragging then
+				if (dragInputType == Enum.UserInputType.MouseButton1
+						and input.UserInputType == Enum.UserInputType.MouseButton1)
+					or (dragInputType == Enum.UserInputType.Touch
+						and input.UserInputType == Enum.UserInputType.Touch) then
+					dragging = false
+					dragInputType = nil
+					unfreezeScrolling()
+				end
 			end
 		end)
+
 		closePill.MouseButton1Click:Connect(function()
 			if not canopen then
 				return
@@ -473,6 +590,7 @@ local library = (function()
 				track.Text = ""
 				track.ZIndex = row.ZIndex + 2
 				track.Parent = row
+				markNoDrag(track)
 				corner(track, 16)
 				local knob = Instance.new("Frame")
 				knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -480,6 +598,7 @@ local library = (function()
 				knob.Size = UDim2.fromOffset(27, 27)
 				knob.ZIndex = track.ZIndex + 1
 				knob.Parent = track
+				markNoDrag(knob)
 				corner(knob, 14)
 				stroke(knob, Color3.fromRGB(0, 0, 0), 1, 0.9)
 				local toggled = false
@@ -526,6 +645,7 @@ local library = (function()
 				field.Size = UDim2.new(0.5, -16, 0, 32)
 				field.ZIndex = row.ZIndex + 1
 				field.Parent = row
+				markNoDrag(field)
 				corner(field, 16)
 				local box = Instance.new("TextBox")
 				box.BackgroundTransparency = 1
@@ -541,6 +661,7 @@ local library = (function()
 				box.TextXAlignment = Enum.TextXAlignment.Right
 				box.ZIndex = field.ZIndex + 1
 				box.Parent = field
+				markNoDrag(box)
 				box.FocusLost:Connect(function()
 					if #box.Text > 0 then
 						pcall(callback, box.Text)
