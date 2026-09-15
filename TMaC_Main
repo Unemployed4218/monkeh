@@ -170,7 +170,8 @@ local function makeRow(parent, height)
 	return row
 end
 
-local function attachControls(parent)
+local function attachControls(parent, markNoDrag)
+	markNoDrag = markNoDrag or function() end
 
 	local controls = {}
 
@@ -238,6 +239,7 @@ local function attachControls(parent)
 		track.Text = ""
 		track.ZIndex = row.ZIndex + 2
 		track.Parent = row
+		markNoDrag(track)
 		corner(track, 16)
 		local knob = Instance.new("Frame")
 		knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -245,6 +247,7 @@ local function attachControls(parent)
 		knob.Size = UDim2.fromOffset(27, 27)
 		knob.ZIndex = track.ZIndex + 1
 		knob.Parent = track
+		markNoDrag(knob)
 		corner(knob, 14)
 		stroke(knob, Color3.fromRGB(0, 0, 0), 1, 0.9)
 		local toggled = false
@@ -292,6 +295,7 @@ local function attachControls(parent)
 		field.Size = UDim2.new(0.5, -16, 0, 32)
 		field.ZIndex = row.ZIndex + 1
 		field.Parent = row
+		markNoDrag(field)
 		corner(field, 16)
 		local box = Instance.new("TextBox")
 		box.BackgroundTransparency = 1
@@ -307,6 +311,7 @@ local function attachControls(parent)
 		box.TextXAlignment = Enum.TextXAlignment.Right
 		box.ZIndex = field.ZIndex + 1
 		box.Parent = field
+		markNoDrag(box)
 		box.FocusLost:Connect(function()
 			if #box.Text > 0 then
 				pcall(callback, box.Text)
@@ -543,7 +548,7 @@ local function attachControls(parent)
 			chevron.Text = open and "–" or "+"
 		end)
 
-		return attachControls(objects), wrap
+		return attachControls(objects, markNoDrag), wrap
 	end
 
 	return controls
@@ -566,7 +571,51 @@ function lib:AddWindow(title, options)
 	Window.Parent = windowsFrame
 	glass(Window)
 	Window.BackgroundColor3 = Theme.sheet
-	Window.Draggable = true
+	Window.Draggable = false
+
+	local function markNoDrag(obj)
+		if obj then
+			obj:SetAttribute("NoDrag", true)
+		end
+	end
+
+	local function isVisibleInWindow(obj)
+		local node = obj
+		while node and node ~= Window do
+			if node:IsA("GuiObject") and not node.Visible then
+				return false
+			end
+			node = node.Parent
+		end
+		return node == Window and Window.Visible
+	end
+
+	local function pointInGui(obj, pos)
+		if not obj then
+			return false
+		end
+		local p = obj.AbsolutePosition
+		local s = obj.AbsoluteSize
+		return pos.X >= p.X and pos.Y >= p.Y and pos.X <= p.X + s.X and pos.Y <= p.Y + s.Y
+	end
+
+	local function isNoDragAt(pos)
+		for _, desc in ipairs(Window:GetDescendants()) do
+			if desc:IsA("GuiObject") and desc:GetAttribute("NoDrag") and isVisibleInWindow(desc) and pointInGui(desc, pos) then
+				return true
+			end
+		end
+		return false
+	end
+
+	local function isScrollAreaAt(pos)
+		for _, desc in ipairs(Window:GetDescendants()) do
+			if desc:IsA("ScrollingFrame") and desc.Name ~= "TabButtons" and desc.ScrollingEnabled ~= false and isVisibleInWindow(desc) and pointInGui(desc, pos) then
+				return true
+			end
+		end
+		return false
+	end
 
 	local closePill = Instance.new("TextButton")
 	closePill.Name = "Toggle"
@@ -578,6 +627,7 @@ function lib:AddWindow(title, options)
 	closePill.Text = ""
 	closePill.ZIndex = Window.ZIndex + 5
 	closePill.Parent = Window
+	markNoDrag(closePill)
 	corner(closePill, 18)
 
 	local closeGlyph = Instance.new("TextLabel")
@@ -670,16 +720,26 @@ function lib:AddWindow(title, options)
 	resizeHandle.TextSize = 18
 	resizeHandle.ZIndex = Window.ZIndex + 10
 	resizeHandle.Parent = Window
+	markNoDrag(resizeHandle)
 
 	local resizing = false
 	local resizeStart = Vector2.zero
 	local resizeStartSize = Vector2.zero
 	local resizeInputType = nil
 
+	local dragging = false
+	local dragPending = false
+	local dragFromScroll = false
+	local dragInputType = nil
+	local dragStart = Vector2.zero
+	local dragStartPos = UDim2.new()
+
 	local function beginResize(input)
 		if not open then
 			return
 		end
+		dragging = false
+		dragInputType = nil
 		resizing = true
 		resizeInputType = input.UserInputType
 		resizeStart = Vector2.new(input.Position.X, input.Position.Y)
@@ -702,35 +762,116 @@ function lib:AddWindow(title, options)
 		end
 	end)
 
-	UIS.InputChanged:Connect(function(input)
-		if not resizing then
+	UIS.InputBegan:Connect(function(input)
+		if resizing or not root.Enabled then
 			return
 		end
-		local isMouseMove = resizeInputType == Enum.UserInputType.MouseButton1
+		if input.UserInputType ~= Enum.UserInputType.MouseButton1
+			and input.UserInputType ~= Enum.UserInputType.Touch then
+			return
+		end
+		local pos = Vector2.new(input.Position.X, input.Position.Y)
+		if not pointInGui(Window, pos) or isNoDragAt(pos) then
+			return
+		end
+		dragging = false
+		dragPending = true
+		dragFromScroll = isScrollAreaAt(pos)
+		dragInputType = input.UserInputType
+		dragStart = pos
+		dragStartPos = Window.Position
+	end)
+
+	local function commitWindowDrag()
+		if dragging or not dragPending then
+			return
+		end
+		dragging = true
+		dragPending = false
+		if Window.AnchorPoint ~= Vector2.zero then
+			local absoluteTopLeft = Window.AbsolutePosition
+			local parentTopLeft = windowsFrame.AbsolutePosition
+			Window.AnchorPoint = Vector2.zero
+			Window.Position = UDim2.fromOffset(
+				absoluteTopLeft.X - parentTopLeft.X,
+				absoluteTopLeft.Y - parentTopLeft.Y
+			)
+			dragStartPos = Window.Position
+		end
+	end
+
+	UIS.InputChanged:Connect(function(input)
+		if resizing then
+			local isMouseMove = resizeInputType == Enum.UserInputType.MouseButton1
+				and input.UserInputType == Enum.UserInputType.MouseMovement
+			local isTouchMove = resizeInputType == Enum.UserInputType.Touch
+				and input.UserInputType == Enum.UserInputType.Touch
+			if not isMouseMove and not isTouchMove then
+				return
+			end
+			local current = Vector2.new(input.Position.X, input.Position.Y)
+			local delta = current - resizeStart
+			local newWidth = math.max(options.min_size.X, resizeStartSize.X + delta.X)
+			local newHeight = math.max(options.min_size.Y, resizeStartSize.Y + delta.Y)
+			Window.Size = UDim2.fromOffset(newWidth, newHeight)
+			oldy = newHeight
+			return
+		end
+		if not dragging and not dragPending then
+			return
+		end
+		local isMouseMove = dragInputType == Enum.UserInputType.MouseButton1
 			and input.UserInputType == Enum.UserInputType.MouseMovement
-		local isTouchMove = resizeInputType == Enum.UserInputType.Touch
+		local isTouchMove = dragInputType == Enum.UserInputType.Touch
 			and input.UserInputType == Enum.UserInputType.Touch
 		if not isMouseMove and not isTouchMove then
 			return
 		end
 		local current = Vector2.new(input.Position.X, input.Position.Y)
-		local delta = current - resizeStart
-		local newWidth = math.max(options.min_size.X, resizeStartSize.X + delta.X)
-		local newHeight = math.max(options.min_size.Y, resizeStartSize.Y + delta.Y)
-		Window.Size = UDim2.fromOffset(newWidth, newHeight)
-		oldy = newHeight
+		local delta = current - dragStart
+		if dragPending and not dragging then
+			local moved = math.max(math.abs(delta.X), math.abs(delta.Y))
+			if moved < 6 then
+				return
+			end
+			if dragFromScroll and math.abs(delta.Y) >= math.abs(delta.X) then
+				dragPending = false
+				dragInputType = nil
+				return
+			end
+			commitWindowDrag()
+		end
+		if not dragging then
+			return
+		end
+		Window.Position = UDim2.new(
+			dragStartPos.X.Scale,
+			dragStartPos.X.Offset + delta.X,
+			dragStartPos.Y.Scale,
+			dragStartPos.Y.Offset + delta.Y
+		)
 	end)
 
 	UIS.InputEnded:Connect(function(input)
-		if not resizing then
-			return
+		if resizing then
+			if (resizeInputType == Enum.UserInputType.MouseButton1
+					and input.UserInputType == Enum.UserInputType.MouseButton1)
+				or (resizeInputType == Enum.UserInputType.Touch
+					and input.UserInputType == Enum.UserInputType.Touch) then
+				resizing = false
+				resizeInputType = nil
+			end
 		end
-		if (resizeInputType == Enum.UserInputType.MouseButton1
-				and input.UserInputType == Enum.UserInputType.MouseButton1)
-			or (resizeInputType == Enum.UserInputType.Touch
-				and input.UserInputType == Enum.UserInputType.Touch) then
-			resizing = false
-			resizeInputType = nil
+		if dragging or dragPending then
+			if (dragInputType == Enum.UserInputType.MouseButton1
+					and input.UserInputType == Enum.UserInputType.MouseButton1)
+				or (dragInputType == Enum.UserInputType.Touch
+					and input.UserInputType == Enum.UserInputType.Touch) then
+				dragging = false
+				dragPending = false
+				dragFromScroll = false
+				dragInputType = nil
+			end
 		end
 	end)
 
@@ -829,7 +970,7 @@ function lib:AddWindow(title, options)
 			task.defer(show)
 		end
 
-		local tab_data = attachControls(new_tab)
+		local tab_data = attachControls(new_tab, markNoDrag)
 
 		function tab_data:Show()
 			show()
