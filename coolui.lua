@@ -140,7 +140,7 @@ window.Selectable = true
 window.Size = UDim2.new(1, 0, 1, 0)
 window.Image = "rbxassetid://74855871158993"
 window.ImageColor3 = Color3.new(1, 1, 1)
-window.ScaleType = Enum.ScaleType.Slice
+window.ScaleType = Enum.ScaleType.Stretch
 window.SliceCenter = Rect.new(12, 12, 12, 12)
 resizer.Name = "Resizer"
 resizer.Parent = window
@@ -897,6 +897,7 @@ function library:AddWindow(title, options)
 	Window.ZIndex = Window.ZIndex + (windows * 10)
 	if options.background and options.background ~= "" then
 		Window.Image = tostring(options.background)
+		Window.ScaleType = Enum.ScaleType.Stretch
 		if options.background_color then
 			Window.ImageColor3 = options.background_color
 		else
