@@ -267,6 +267,7 @@ Frame.BorderColor3 = Color3.new(0, 0, 0)
 Frame.BorderSizePixel = 0
 Frame.Position = UDim2.new(0, 0, 1, 0)
 Frame.Size = UDim2.new(1, 0, 0, 0)
+Frame.Visible = false
 
 Tab.Name = "Tab"
 Tab.Parent = Prefabs
@@ -1199,6 +1200,7 @@ function library:AddWindow(title, options)
 							if round then
 								round.ImageColor3 = Color3.fromRGB(0, 0, 0)
 							end
+							v.TextColor3 = Color3.new(1, 1, 1)
 							Resize(v, {Size = UDim2.new(0, v.AbsoluteSize.X, 0, 20)}, options.tween_time)
 						end
 					end
@@ -1211,6 +1213,7 @@ function library:AddWindow(title, options)
 					if round then
 						round.ImageColor3 = Color3.fromRGB(255, 255, 255)
 					end
+					new_button.TextColor3 = Color3.new(0, 0, 0)
 					new_tab.Visible = true
 					task.defer(updateTabCanvas)
 				end
