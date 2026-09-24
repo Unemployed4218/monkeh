@@ -132,16 +132,28 @@ label.TextXAlignment = Enum.TextXAlignment.Left
 window.Name = "Window"
 window.Parent = prefabs
 window.Active = true
-window.BackgroundColor3 = Color3.new(1, 1, 1)
-window.BackgroundTransparency = 1
+window.BackgroundColor3 = Color3.fromRGB(21, 22, 23)
+window.BackgroundTransparency = 0
 window.ClipsDescendants = true
 window.Position = UDim2.new(0, 0, 0, 0)
 window.Selectable = true
 window.Size = UDim2.new(1, 0, 1, 0)
-window.Image = "rbxassetid://74855871158993"
+window.Image = ""
 window.ImageColor3 = Color3.new(1, 1, 1)
 window.ScaleType = Enum.ScaleType.Stretch
 window.SliceCenter = Rect.new(12, 12, 12, 12)
+local windowBg = Instance.new("ImageLabel")
+windowBg.Name = "Background"
+windowBg.Parent = window
+windowBg.BackgroundTransparency = 1
+windowBg.BorderSizePixel = 0
+windowBg.Size = UDim2.new(1, 0, 1, 0)
+windowBg.Position = UDim2.new(0, 0, 0, 0)
+windowBg.ZIndex = 0
+windowBg.Image = "rbxassetid://74855871158993"
+windowBg.ImageColor3 = Color3.new(1, 1, 1)
+windowBg.ImageTransparency = 0
+windowBg.ScaleType = Enum.ScaleType.Stretch
 resizer.Name = "Resizer"
 resizer.Parent = window
 resizer.Active = true
@@ -895,16 +907,32 @@ function library:AddWindow(title, options)
 	Window:FindFirstChild("Title").Text = title
 	Window.Size = UDim2.new(0, options.min_size.X, 0, options.min_size.Y)
 	Window.ZIndex = Window.ZIndex + (windows * 10)
-	if options.background and options.background ~= "" then
-		Window.Image = tostring(options.background)
-		Window.ScaleType = Enum.ScaleType.Stretch
-		if options.background_color then
-			Window.ImageColor3 = options.background_color
-		else
-			Window.ImageColor3 = Color3.new(1, 1, 1)
+	do
+		local bg = Window:FindFirstChild("Background")
+		if not bg then
+			bg = Instance.new("ImageLabel")
+			bg.Name = "Background"
+			bg.Parent = Window
+			bg.BackgroundTransparency = 1
+			bg.BorderSizePixel = 0
+			bg.Size = UDim2.new(1, 0, 1, 0)
+			bg.Position = UDim2.new(0, 0, 0, 0)
+			bg.ZIndex = 0
+			bg.ScaleType = Enum.ScaleType.Stretch
+			bg.ImageTransparency = 0
 		end
-	elseif options.background_color then
-		Window.ImageColor3 = options.background_color
+		if options.background and options.background ~= "" then
+			bg.Image = tostring(options.background)
+			bg.Visible = true
+			if options.background_color then
+				bg.ImageColor3 = options.background_color
+			else
+				bg.ImageColor3 = Color3.new(1, 1, 1)
+			end
+		else
+			bg.Image = ""
+			bg.Visible = false
+		end
 	end
 	do
 		local Title = Window:FindFirstChild("Title")
@@ -1982,6 +2010,10 @@ function library:AddWindow(title, options)
 			if hasprop(v, "ZIndex") then
 				v.ZIndex = v.ZIndex + (windows * 10)
 			end
+		end
+		local bg = Window:FindFirstChild("Background")
+		if bg then
+			bg.ZIndex = Window.ZIndex
 		end
 	end
 	return window_data, Window
