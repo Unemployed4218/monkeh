@@ -106,15 +106,14 @@ Label.TextXAlignment = Enum.TextXAlignment.Left
 Window.Name = "Window"
 Window.Parent = Prefabs
 Window.Active = true
-Window.BackgroundColor3 = Color3.new(1, 1, 1)
+Window.BackgroundColor3 = Color3.new(0, 0, 0)
 Window.BackgroundTransparency = 0
 Window.ClipsDescendants = true
 Window.Position = UDim2.new(0, 20, 0, 20)
 Window.Selectable = true
 Window.Size = UDim2.new(0, 200, 0, 200)
-Window.Image = "rbxassetid://75793804195252"
-Window.ImageColor3 = Color3.new(0, 0, 0)
-Window.ImageTransparency = 0
+Window.Image = ""
+Window.ImageTransparency = 1
 Window.ScaleType = Enum.ScaleType.Stretch
 
 local Corner = Instance.new("UICorner")
@@ -213,10 +212,11 @@ Top.SliceCenter = Rect.new(12, 12, 12, 12)
 
 Tabs.Name = "Tabs"
 Tabs.Parent = Window
-Tabs.BackgroundColor3 = Color3.new(1, 1, 1)
-Tabs.BackgroundTransparency = 1
-Tabs.Position = UDim2.new(0, 15, 0, 60)
-Tabs.Size = UDim2.new(1, -30, 1, -60)
+Tabs.BackgroundColor3 = Color3.new(0, 0, 0)
+Tabs.BackgroundTransparency = 0
+Tabs.Position = UDim2.new(0, 15, 0, 55)
+Tabs.Size = UDim2.new(1, -30, 1, -55)
+Tabs.BorderSizePixel = 0
 
 Title.Name = "Title"
 Title.Parent = Window
@@ -233,18 +233,19 @@ Title.TextXAlignment = Enum.TextXAlignment.Left
 TabSelection.Name = "TabSelection"
 TabSelection.Parent = Window
 TabSelection.BackgroundColor3 = Color3.new(0, 0, 0)
-TabSelection.BackgroundTransparency = 1
+TabSelection.BackgroundTransparency = 0
 TabSelection.Position = UDim2.new(0, 15, 0, 30)
 TabSelection.Size = UDim2.new(1, -30, 0, 25)
 TabSelection.Visible = false
 TabSelection.Image = ""
 TabSelection.ImageTransparency = 1
+TabSelection.BorderSizePixel = 0
 TabSelection.ClipsDescendants = true
 
 TabButtons.Name = "TabButtons"
 TabButtons.Parent = TabSelection
-TabButtons.BackgroundColor3 = Color3.new(1, 1, 1)
-TabButtons.BackgroundTransparency = 1
+TabButtons.BackgroundColor3 = Color3.new(0, 0, 0)
+TabButtons.BackgroundTransparency = 0
 TabButtons.BorderSizePixel = 0
 TabButtons.Size = UDim2.new(1, 0, 1, 0)
 TabButtons.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -445,8 +446,8 @@ TextButton_Roundify_4px.SliceCenter = Rect.new(4, 4, 4, 4)
 
 TabButton.Name = "TabButton"
 TabButton.Parent = Prefabs
-TabButton.BackgroundColor3 = Color3.new(0.160784, 0.290196, 0.478431)
-TabButton.BackgroundTransparency = 1
+TabButton.BackgroundColor3 = Color3.new(0, 0, 0)
+TabButton.BackgroundTransparency = 0
 TabButton.BorderSizePixel = 0
 TabButton.Position = UDim2.new(0.185185179, 0, 0, 0)
 TabButton.Size = UDim2.new(0, 71, 0, 20)
@@ -458,11 +459,11 @@ TabButton.TextSize = 17
 
 TextButton_Roundify_4px_2.Name = "TextButton_Roundify_4px"
 TextButton_Roundify_4px_2.Parent = TabButton
-TextButton_Roundify_4px_2.BackgroundColor3 = Color3.new(1, 1, 1)
+TextButton_Roundify_4px_2.BackgroundColor3 = Color3.new(0, 0, 0)
 TextButton_Roundify_4px_2.BackgroundTransparency = 1
 TextButton_Roundify_4px_2.Size = UDim2.new(1, 0, 1, 0)
-TextButton_Roundify_4px_2.Image = "rbxassetid://2851929490"
-TextButton_Roundify_4px_2.ImageColor3 = Color3.new(0, 0, 0)
+TextButton_Roundify_4px_2.Image = ""
+TextButton_Roundify_4px_2.ImageTransparency = 1
 TextButton_Roundify_4px_2.ScaleType = Enum.ScaleType.Slice
 TextButton_Roundify_4px_2.SliceCenter = Rect.new(4, 4, 4, 4)
 
@@ -1179,10 +1180,7 @@ function library:AddWindow(title, options)
 					if dropdown_open then return end
 					for i, v in next, tab_buttons:GetChildren() do
 						if not (v:IsA("UIListLayout")) and v:IsA("GuiObject") then
-							local round = v:FindFirstChild("TextButton_Roundify_4px")
-							if round then
-								round.ImageColor3 = Color3.fromRGB(0, 0, 0)
-							end
+							v.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 							Resize(v, {Size = UDim2.new(0, v.AbsoluteSize.X, 0, 20)}, options.tween_time)
 						end
 					end
@@ -1191,10 +1189,7 @@ function library:AddWindow(title, options)
 					end
 
 					Resize(new_button, {Size = UDim2.new(0, new_button.AbsoluteSize.X, 0, 25)}, options.tween_time)
-					local round = new_button:FindFirstChild("TextButton_Roundify_4px")
-					if round then
-						round.ImageColor3 = Color3.fromRGB(20, 20, 20)
-					end
+					new_button.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 					new_tab.Visible = true
 					task.defer(updateTabCanvas)
 				end
