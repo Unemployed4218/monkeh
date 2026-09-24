@@ -107,14 +107,14 @@ Window.Name = "Window"
 Window.Parent = Prefabs
 Window.Active = true
 Window.BackgroundColor3 = Color3.new(1, 1, 1)
-Window.BackgroundTransparency = 0.7
+Window.BackgroundTransparency = 0
 Window.ClipsDescendants = true
 Window.Position = UDim2.new(0, 20, 0, 20)
 Window.Selectable = true
 Window.Size = UDim2.new(0, 200, 0, 200)
 Window.Image = "rbxassetid://75793804195252"
 Window.ImageColor3 = Color3.new(0, 0, 0)
-Window.ImageTransparency = 0.2
+Window.ImageTransparency = 0
 Window.ScaleType = Enum.ScaleType.Stretch
 
 local Corner = Instance.new("UICorner")
@@ -133,7 +133,7 @@ Resizer.Size = UDim2.new(0, 20, 0, 20)
 Bar.Name = "Bar"
 Bar.Parent = Window
 Bar.BackgroundColor3 = Color3.new(0.160784, 0.290196, 0.478431)
-Bar.BackgroundTransparency = 0.3
+Bar.BackgroundTransparency = 0
 Bar.BorderSizePixel = 0
 Bar.Position = UDim2.new(0, 0, 0, 5)
 Bar.Size = UDim2.new(1, 0, 0, 15)
@@ -190,13 +190,13 @@ Toggle.Image = "https://www.roblox.com/Thumbs/Asset.ashx?width=420&height=420&as
 Base.Name = "Base"
 Base.Parent = Bar
 Base.BackgroundColor3 = Color3.new(0.160784, 0.290196, 0.478431)
-Base.BackgroundTransparency = 0.4
+Base.BackgroundTransparency = 0
 Base.BorderSizePixel = 0
 Base.Position = UDim2.new(0, 0, 0.800000012, 0)
 Base.Size = UDim2.new(1, 0, 0, 10)
 Base.Image = "rbxassetid://2851926732"
 Base.ImageColor3 = Color3.new(0.160784, 0.290196, 0.478431)
-Base.ImageTransparency = 0.4
+Base.ImageTransparency = 0
 Base.ScaleType = Enum.ScaleType.Slice
 Base.SliceCenter = Rect.new(12, 12, 12, 12)
 
@@ -232,15 +232,13 @@ Title.TextXAlignment = Enum.TextXAlignment.Left
 
 TabSelection.Name = "TabSelection"
 TabSelection.Parent = Window
-TabSelection.BackgroundColor3 = Color3.new(1, 1, 1)
+TabSelection.BackgroundColor3 = Color3.new(0, 0, 0)
 TabSelection.BackgroundTransparency = 1
 TabSelection.Position = UDim2.new(0, 15, 0, 30)
 TabSelection.Size = UDim2.new(1, -30, 0, 25)
 TabSelection.Visible = false
-TabSelection.Image = "rbxassetid://2851929490"
-TabSelection.ImageColor3 = Color3.new(0, 0, 0)
-TabSelection.ScaleType = Enum.ScaleType.Slice
-TabSelection.SliceCenter = Rect.new(4, 4, 4, 4)
+TabSelection.Image = ""
+TabSelection.ImageTransparency = 1
 TabSelection.ClipsDescendants = true
 
 TabButtons.Name = "TabButtons"
@@ -262,11 +260,11 @@ UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 UIListLayout.Padding = UDim.new(0, 2)
 
 Frame.Parent = TabSelection
-Frame.BackgroundColor3 = Color3.new(0, 0, 0)
+Frame.BackgroundTransparency = 1
 Frame.BorderSizePixel = 0
-Frame.Position = UDim2.new(0, 0, 1, 0)
-Frame.Size = UDim2.new(1, 0, 0, 0)
+Frame.Size = UDim2.new(0, 0, 0, 0)
 Frame.Visible = false
+Frame:Destroy()
 
 Tab.Name = "Tab"
 Tab.Parent = Prefabs
@@ -1019,12 +1017,10 @@ function library:AddWindow(title, options)
 		local Bar = Window:FindFirstChild("Bar")
 		local Base = Bar:FindFirstChild("Base")
 		local Top = Bar:FindFirstChild("Top")
-		local SplitFrame = Window:FindFirstChild("TabSelection"):FindFirstChild("Frame")
 		Bar.BackgroundColor3 = options.main_color
 		Base.BackgroundColor3 = options.main_color
 		Base.ImageColor3 = options.main_color
 		Top.ImageColor3 = options.main_color
-		SplitFrame.BackgroundColor3 = options.main_color
 	end
 
 	local Resizer = Window:WaitForChild("Resizer")
