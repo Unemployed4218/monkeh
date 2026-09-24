@@ -106,15 +106,15 @@ Label.TextXAlignment = Enum.TextXAlignment.Left
 Window.Name = "Window"
 Window.Parent = Prefabs
 Window.Active = true
-Window.BackgroundColor3 = Color3.new(1, 1, 1)
-Window.BackgroundTransparency = 0.7
+Window.BackgroundColor3 = Color3.new(0, 0, 0)
+Window.BackgroundTransparency = 0.4
 Window.ClipsDescendants = true
 Window.Position = UDim2.new(0, 20, 0, 20)
 Window.Selectable = true
 Window.Size = UDim2.new(0, 200, 0, 200)
 Window.Image = "rbxassetid://75793804195252"
 Window.ImageColor3 = Color3.new(0, 0, 0)
-Window.ImageTransparency = 0.2
+Window.ImageTransparency = 0.15
 Window.ScaleType = Enum.ScaleType.Stretch
 
 local Corner = Instance.new("UICorner")
@@ -133,7 +133,7 @@ Resizer.Size = UDim2.new(0, 20, 0, 20)
 Bar.Name = "Bar"
 Bar.Parent = Window
 Bar.BackgroundColor3 = Color3.new(1, 1, 1)
-Bar.BackgroundTransparency = 0.3
+Bar.BackgroundTransparency = 0.25
 Bar.BorderSizePixel = 0
 Bar.Position = UDim2.new(0, 0, 0, 5)
 Bar.Size = UDim2.new(1, 0, 0, 15)
@@ -190,13 +190,13 @@ Toggle.Image = "https://www.roblox.com/Thumbs/Asset.ashx?width=420&height=420&as
 Base.Name = "Base"
 Base.Parent = Bar
 Base.BackgroundColor3 = Color3.new(1, 1, 1)
-Base.BackgroundTransparency = 0.4
+Base.BackgroundTransparency = 0.3
 Base.BorderSizePixel = 0
 Base.Position = UDim2.new(0, 0, 0.800000012, 0)
 Base.Size = UDim2.new(1, 0, 0, 10)
 Base.Image = "rbxassetid://2851926732"
 Base.ImageColor3 = Color3.new(1, 1, 1)
-Base.ImageTransparency = 0.4
+Base.ImageTransparency = 0.3
 Base.ScaleType = Enum.ScaleType.Slice
 Base.SliceCenter = Rect.new(12, 12, 12, 12)
 
@@ -294,7 +294,7 @@ TextBox.BorderSizePixel = 0
 TextBox.Size = UDim2.new(0, 320, 0, 20)
 TextBox.ZIndex = 2
 TextBox.Font = Enum.Font.PermanentMarker
-TextBox.PlaceholderColor3 = Color3.new(0.6, 0.6, 0.6)
+TextBox.PlaceholderColor3 = Color3.new(0.8, 0.8, 0.8)
 TextBox.PlaceholderText = "Input Text"
 TextBox.Text = ""
 TextBox.TextColor3 = Color3.new(1, 1, 1)
@@ -361,7 +361,7 @@ TextLabel.Position = UDim2.new(1, -20, -0.75, 0)
 TextLabel.Size = UDim2.new(0, 26, 0, 50)
 TextLabel.Font = Enum.Font.PermanentMarker
 TextLabel.Text = "]"
-TextLabel.TextColor3 = Color3.new(0.7, 0.7, 0.7)
+TextLabel.TextColor3 = Color3.new(1, 1, 1)
 TextLabel.TextSize = 17
 
 TextLabel_2.Parent = Slider
@@ -371,7 +371,7 @@ TextLabel_2.Position = UDim2.new(1, -65, -0.75, 0)
 TextLabel_2.Size = UDim2.new(0, 26, 0, 50)
 TextLabel_2.Font = Enum.Font.PermanentMarker
 TextLabel_2.Text = "["
-TextLabel_2.TextColor3 = Color3.new(0.7, 0.7, 0.7)
+TextLabel_2.TextColor3 = Color3.new(1, 1, 1)
 TextLabel_2.TextSize = 17
 
 Circle.Name = "Circle"
@@ -561,7 +561,7 @@ Source.ZIndex = 3
 Source.ClearTextOnFocus = false
 Source.Font = Enum.Font.PermanentMarker
 Source.MultiLine = true
-Source.PlaceholderColor3 = Color3.new(0.6, 0.6, 0.6)
+Source.PlaceholderColor3 = Color3.new(0.8, 0.8, 0.8)
 Source.Text = ""
 Source.TextColor3 = Color3.new(1, 1, 1)
 Source.TextSize = 15
@@ -763,7 +763,7 @@ TextButton_Roundify_4px_4.BackgroundTransparency = 1
 TextButton_Roundify_4px_4.Size = UDim2.new(1, 0, 1, 0)
 TextButton_Roundify_4px_4.Image = "rbxassetid://138179839525478"
 TextButton_Roundify_4px_4.ImageColor3 = Color3.new(1, 1, 1)
-TextButton_Roundify_4px_4.ImageTransparency = 0.5
+TextButton_Roundify_4px_4.ImageTransparency = 0
 TextButton_Roundify_4px_4.ScaleType = Enum.ScaleType.Slice
 TextButton_Roundify_4px_4.SliceCenter = Rect.new(4, 4, 4, 4)
 
@@ -1209,7 +1209,7 @@ function library:AddWindow(title, options)
 					Resize(new_button, {Size = UDim2.new(0, new_button.AbsoluteSize.X, 0, 25)}, options.tween_time)
 					local round = new_button:FindFirstChild("TextButton_Roundify_4px")
 					if round then
-						round.ImageColor3 = Color3.fromRGB(40, 40, 40)
+						round.ImageColor3 = Color3.fromRGB(255, 255, 255)
 					end
 					new_tab.Visible = true
 					task.defer(updateTabCanvas)
