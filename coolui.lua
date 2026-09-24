@@ -266,7 +266,7 @@ Frame.BackgroundColor3 = Color3.new(1, 1, 1)
 Frame.BorderColor3 = Color3.new(0, 0, 0)
 Frame.BorderSizePixel = 0
 Frame.Position = UDim2.new(0, 0, 1, 0)
-Frame.Size = UDim2.new(1, 0, 0, 2)
+Frame.Size = UDim2.new(1, 0, 0, 0)
 
 Tab.Name = "Tab"
 Tab.Parent = Prefabs
